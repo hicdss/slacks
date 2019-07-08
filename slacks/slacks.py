@@ -72,7 +72,7 @@ class ApiClient:
 class MessageObject(dict):
 
     def __init__(self, message, args):
-        self.dict = self._create_message_dict(message)
+        self.dict = self._create_message_dict(message, args)
         self.json = json.dumps(self.dict)
 
     def __repr__(self):
@@ -86,7 +86,7 @@ class MessageObject(dict):
     def _format_block(self, txt):
         return "```\n%s\n```" % (txt)
 
-    def _create_message_dict(self, message):
+    def _create_message_dict(self, message, args):
         if isinstance(message, dict):
             return message
         return {
@@ -95,7 +95,7 @@ class MessageObject(dict):
                     {
                         "type" : "section",
                         "text" : {
-                            "type": "mrkdwn",
+                            "type": "plain_text" if args.plaintext else "mrkdwn",
                             "text": self._format_text(message)
                         }
                     },
@@ -122,6 +122,12 @@ if __name__ == "__main__":
         action="store"
     )
     parser.add_argument(
+        "-m", "--message",
+        help="pass message as string",
+        nargs="?",
+        action="store"
+    )
+    parser.add_argument(
         "-b", "--block",
         help="Message will be a markdown block",
         action="store_true"
@@ -131,11 +137,18 @@ if __name__ == "__main__":
         help="Use exapmle from example.py",
         action="store_true"
     )
+    parser.add_argument(
+        "-p", "--plaintext",
+        help="Format with plaintext instead of markdown",
+        action="store_true"
+    )
 
     args = parser.parse_args()
 
     if args.test:
         text = DEFAULT
+    elif args.message:
+        text = args.message
     else:
         if args.file:
             text = _get_text_from_file(args.file)

@@ -5,4 +5,4 @@ RUN pip install -r /app/requirements.txt
 
 WORKDIR /app
 
-ENTRYPOINT ./slacks/slacks.py
+ENTRYPOINT ["/bin/sh", "-c", "/app/slacks/slacks.py \"$@\"", "--"]
