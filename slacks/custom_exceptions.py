@@ -6,3 +6,10 @@ class InvalidMessageObjectException(Exception):
 class NotImplementedException(Exception):
     """Raised when a functionality is not yet implemented"""
     pass
+
+class NoWebhookUrlException(Exception):
+    """Raised when no webhook URL was provided"""
+    pass
+
+class NoMessageException(Exception):
+	"""Rased when no message was provided"""

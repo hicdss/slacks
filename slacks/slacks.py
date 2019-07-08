@@ -6,39 +6,46 @@ import json
 import sys
 import pprint
 import os
+import select
 
-from example import EXAMPLE
 from custom_exceptions import InvalidMessageObjectException
 from custom_exceptions import NotImplementedException
+from custom_exceptions import NoWebhookUrlException
+from custom_exceptions import NoMessageException
 
 EMPTY = "_[WARNING]: no message provided_"
 DEFAULT = ["*Hello, world*!\n", "This is _slacks_, a command-line utility for your Slack integrations!"]
 
 
+def _get_text_from_stdin():
+    text = []
+    while sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+        line = sys.stdin.readline()
+        if line:
+            text.append(line)
+        else:
+            break
+    return text
+
+def _get_text_from_file(file):
+    with open(file, 'r') as f:
+        text = f.readlines()
+    return text
+
 class Config:
     def __init__(self):
-        self.config_file = self._find_config_file()
-        self.config = self._parse_config_file()
+        self.config = self._parse_configuration()
 
     def __getitem__(self, key):
         return self.config[key]
 
-    def _find_config_file(self):
-        try_files = [
-            '.slacksrc',
-            '%s/.slacksrc' % (os.environ['HOME'])
-        ]
-        for file in try_files:
-            if os.path.isfile(file):
-                return file
-        return self._create_config_file_from_user_input()
-
-    def _create_config_file_from_user_input(self):
-        raise NotImplementedException('User input is not yet implemented')
-
-    def _parse_config_file(self):
-        with open(self.config_file, 'r') as f:
-            return { key: value for key, value in [ (line.split('=')[0].strip(), line.split('=')[1].strip())  for line in f.readlines() ] }
+    def _parse_configuration(self):
+        try:
+            return {
+                'WEBHOOK_URL': os.environ['WEBHOOK_URL'],
+            }
+        except KeyError:
+            raise NoWebhookUrlException('WEBHOOK_URL was not provided!')
 
 
 class ApiClient:
@@ -131,21 +138,23 @@ if __name__ == "__main__":
         text = DEFAULT
     else:
         if args.file:
-            print(args.file)
-            with open(args.file, 'r') as f:
-                text = f.readlines()
+            text = _get_text_from_file(args.file)
         else:
-            text = EMPTY if sys.stdin.isatty() else sys.stdin.readlines()
-    mo = MessageObject(
-        "".join(
-            text
-        ),
-        args
-    )
+            text = _get_text_from_stdin()
+    
+    if text:
+        mo = MessageObject(
+            "".join(
+                text
+            ),
+            args
+        )
+        print(mo)
+        config = Config()
+        print(config.config)
+        api = ApiClient(config)
+        resp = api.send_message(mo)
+        print(resp.status_code, resp.text)
+    else: 
+        raise NoMessageException("No message was provided")
 
-    print(mo)
-    config = Config()
-    print(config.config)
-    api = ApiClient(config)
-    resp = api.send_message(mo)
-    print(resp.status_code, resp.text)
