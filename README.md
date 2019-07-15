@@ -1,6 +1,8 @@
 # Slacks aka SlackSay
 
-This is a small CLI utility that can be used in scripts to send slack messages via Incoming Webhooks.
+This is a small CLI utility that can be used in scripts to send slack messages via Incoming Webhooks. 
+
+See: https://cloud.docker.com/u/hicrondss/repository/docker/hicrondss/slacks
 
 ## Usage
 
