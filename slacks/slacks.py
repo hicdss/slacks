@@ -98,15 +98,6 @@ class MessageObject(dict):
                             "type": "plain_text" if args.plaintext else "mrkdwn",
                             "text": self._format_text(message)
                         }
-                    },
-                    {
-                        "type": "context",
-                        "elements": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "Sent with <https://github.com/hicdss/slacks|slacks> by <https://hicron.com|Hicron>"
-                            }
-                        ]
                     }
                 ]
             }
